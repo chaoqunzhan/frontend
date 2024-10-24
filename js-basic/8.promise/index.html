@@ -1,0 +1,131 @@
+<html>
+
+</html>
+<script src="./index.js"></script>
+<script>
+func()
+
+//链式调用，没有返回Promise版本
+const PENDING = 'pending';
+const FULFILLED = 'fulfilled';
+const REJECTED = 'rejected';
+function _Promise(handle){
+    if (typeof handle !=='function') {
+        throw new Error(`${handle} must be a function!`)
+    }
+    this._status = PENDING;   //设置初始状态
+    this._value = null;		//设置初始值
+    this.onFulfilledQueues = [];
+    this.onRejectedQueues = [];
+
+  	this._resolve = (val)=>{
+        if(this._status !== PENDING) return 
+        this._status = FULFILLED;
+        this._value = val;
+        this.onFulfilledQueues.pop()();
+    }
+    this._reject = (reason)=>{
+        if(this._status !== PENDING) return 
+        this._status = REJECTED;
+        this._reason = reason;
+        this.onRejectedQueues.forEach(fun=>fun());
+    }
+    try {
+        handle(this._resolve.bind(this),this._reject.bind(this))
+    } catch(err) {   
+        this._reject(err)
+    }
+}
+
+_Promise.prototype.then = function(onFulfilled,onRejected){
+    let x;
+    return new _Promise((resolve,reject)=>{
+        if(this._status === PENDING){
+            this.onFulfilledQueues.push(()=>{
+                try {
+                    x = onFulfilled(this._value);
+                    if(x instanceof _Promise){
+                        let then = x.then;
+                        then.call(x,
+                            y=>{ 
+                                resolve(y)
+                            },
+                            n=>{
+                                reject(n)
+                            }
+                        )
+                    }else{
+                        resolve(x)
+                    }
+                }catch (e){
+                    reject(e)
+                }
+            });
+            this.onRejectedQueues.push(()=>{
+                try {
+                    x=onRejected(this._reason);
+                    if(x instanceof _Promise){
+                        let then = x.then;
+                        then.call(x,
+                            y=>{ 
+                                resolve(y)
+                            },
+                            n=>{
+                                reject(n)
+                            }
+                        )
+                    }else{
+                        resolve(x)
+                    }
+                    // resolve(x)
+                }catch (e){
+                    reject(e)
+                }
+            });
+        }
+
+        if(this._status === FULFILLED){
+            x=onFulfilled(this._value);
+            resolve(x)
+        }
+        if(this._status === REJECTED){
+            x=onRejected(this._reason);
+            resolve(x)
+        }
+    })
+}
+
+// let myPromise = new _Promise((resolve,reject)=>{
+//     setTimeout(()=>{
+//         resolve(10)
+//     },1000)
+// });
+
+
+// myPromise.then(
+//     value=>{
+//         console.log('fulfilled1:',value)
+//         return new _Promise((resolve,reject)=>{
+//             setTimeout(()=>{
+//                 resolve(20)
+//             },2000)
+//         });
+//         // return 20
+//     },
+//     reason=>{
+//         console.log('rejected1:',reason)
+//         return reason
+//     }
+// )
+// .then(
+//     value=>{
+//         console.log('fulfilled2:',value)
+//     },
+//     reason=>{
+//         console.log('rejected2:',reason)
+//     }
+// )
+
+
+
+</script>

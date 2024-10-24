@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动滚动的聊天窗口</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.12/dist/vue.global.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="contain">
+            <div class="block"></div>
+            <p v-for="item in messages" :key="item.id">{{item.content}}</p>
+        </div>
+        <div class="send" @click="onSend">新增一条消息</div>
+    </div>
+</body>
+
+<script>
+  const { createApp, ref } = Vue
+  createApp({
+    setup() {
+        const messages = ref([])
+        const onSend = () => { 
+            messages.value.unshift({
+                id: messages.value.length,
+                content: '我是一条消息----' + messages.value.length
+            })
+        }
+        return {
+            messages,
+            onSend
+        }
+    }
+  }).mount('#app')
+</script>
+<style>
+    body{
+        margin: 0;
+        padding: 0;
+    }
+    #app{
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+    }
+    .contain{
+        flex: 1;
+        overflow-y: scroll;
+        display: flex;
+        flex-direction: column-reverse;
+    }
+    .block{
+        flex: 1;
+    }
+    .send{
+        padding: 20px;
+        text-align: center;
+        background-color: bisque;
+    }
+</style>
+</html>

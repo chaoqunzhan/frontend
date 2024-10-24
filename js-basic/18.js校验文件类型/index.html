@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type="file" id="file" placeholder="请输入文件名">
+</body>
+</html>
+<script>
+    const fileInput = document.getElementById('file')
+    fileInput.addEventListener('change', function (event) {
+        const file = event.target.files[0]
+        if(file){
+            const fileType = file.type
+            //定义支持的图片类型
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif']
+            //首先，检查MIME类型
+            if(validTypes.includes(fileType)){
+                console.log('文件MIME类型是支持的图片类型：', fileType)
+            }else{
+                console.log('文件MIME类型不是支持的图片类型：', fileType)
+            }
+        }
+
+        //读取文件的前8个字节
+        const fileReader = new FileReader()
+        fileReader.readAsArrayBuffer(new Blob([file],{type: 'application/octet-stream'}))
+        fileReader.onload = function (e) {
+            const buffer = e.target.result
+            const dataView = new DataView(buffer)
+            const magicBytes = []
+            //检查文件的前几个字节
+            for(let i = 0; i < 8; i++){
+                magicBytes.push(dataView.getUint8(i))
+            }
+            //JPEG的签名字节通常是
+            if(magicBytes[0] === 0xFF && magicBytes[1] === 0xD8){
+                console.log('通过二进制检查，文件是JPEG图片')
+            }else{
+                console.log('通过二进制检查，文件不是JPEG图片')
+            }
+        }
+    })
+
+</script>
